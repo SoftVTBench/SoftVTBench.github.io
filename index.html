@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SoftVTBench — A Safety-Aware Visuo-Tactile Benchmark for Deformable Object Manipulation</title>
+  <meta name="description" content="SoftVTBench: a contact-rich, visuo-tactile, physics-grounded benchmark for safety-aware deformable object manipulation. Separates Goal Success from Safety Success, exposing goal-complete but physically unsafe rollouts.">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+  <style>
+    /* Project-page-only tweaks, layered on top of the shared stylesheet */
+    .btn-disabled {
+      opacity: 0.5;
+      pointer-events: none;
+      cursor: default;
+    }
+    .author-list {
+      max-width: 900px;
+      margin: 1.5rem auto 0.5rem;
+      text-align: center;
+      font-size: 1.05rem;
+      line-height: 1.9;
+      color: rgba(255,255,255,0.92);
+    }
+    .author-list a { color: inherit; text-decoration: none; border-bottom: 1px dotted rgba(255,255,255,0.5); }
+    .affil-list {
+      max-width: 900px;
+      margin: 0.5rem auto 0;
+      text-align: center;
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.72);
+      line-height: 1.6;
+    }
+    .author-note {
+      max-width: 900px;
+      margin: 0.4rem auto 0;
+      text-align: center;
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.6);
+    }
+    .abstract-block {
+      max-width: 860px;
+      margin: 0 auto;
+      font-size: 1.02rem;
+      line-height: 1.85;
+      color: var(--color-text-soft);
+      text-align: left;
+    }
+    .figure-caption-block {
+      max-width: 900px;
+      margin: 1rem auto 0;
+      font-size: 0.88rem;
+      color: var(--color-text-muted);
+      text-align: center;
+      line-height: 1.6;
+    }
+    .bibtex-block {
+      max-width: 900px;
+      margin: 1.5rem auto 0;
+      background: var(--color-bg-alt);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      line-height: 1.6;
+      color: var(--color-text-soft);
+      white-space: pre;
+    }
+    .result-analysis {
+      max-width: 900px;
+      margin: 1.5rem auto 0;
+      font-size: 0.95rem;
+      line-height: 1.8;
+      color: var(--color-text-soft);
+    }
+    .result-analysis p { margin-bottom: 1rem; }
+    .na-cell { color: var(--color-text-muted); }
+  </style>
+</head>
+<body>
+
+  <!-- ===== Navbar ===== -->
+  <nav class="navbar" role="navigation" aria-label="main navigation">
+    <div class="nav-container">
+      <a class="nav-brand" href="#top">SoftVTBench</a>
+      <button class="nav-toggle" aria-label="menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="nav-menu">
+        <a class="nav-link" href="#abstract">Abstract</a>
+        <a class="nav-link" href="#method">Method</a>
+        <a class="nav-link" href="#suites">Task Suites</a>
+        <a class="nav-link" href="#results">Results</a>
+        <a class="nav-link" href="#dataset">Dataset</a>
+        <a class="nav-link" href="#citation">Citation</a>
+        <a class="nav-link" href="https://github.com/TuojingAI/SoftVTBench" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===== Hero ===== -->
+  <section class="hero" id="top">
+    <div class="hero-grid-overlay"></div>
+    <div class="hero-content">
+      <div class="hero-badge">Benchmark Paper</div>
+      <h1 class="hero-title">SoftVTBench</h1>
+      <p class="hero-tagline">A Contact-Rich, Visuo-Tactile, Physics-Grounded Benchmark for Deformable Object Manipulation</p>
+      <p class="hero-subtitle">Separating Goal Success from Safety Success to expose goal-complete but physically unsafe rollouts — over-compression, slippage, and drops — that success-only evaluation hides.</p>
+
+      <p class="author-list">
+        Bowen Jing<sup>1,*</sup>, Mingxin Wang<sup>1,2,*</sup>, Ruiyang Hao<sup>3</sup>, Chenchen Ge<sup>1,4</sup>,
+        Hanwen Shen<sup>5</sup>, Junjie He<sup>6</sup>, Yang Cui<sup>7</sup>, Yiming Hou<sup>1,4</sup>,
+        Weitao Zhou<sup>2,8,&ddagger;</sup>, Jiawei Wang<sup>8</sup>, Minglei Li<sup>8</sup>,
+        Dandan Zhang<sup>9</sup>, Ding Zhao<sup>10</sup>, Houde Liu<sup>2</sup>, Xiaofan Li<sup>11</sup>,
+        Si Liu<sup>12</sup>, Ping Luo<sup>13</sup>, Haibao Yu<sup>1,13,&ddagger;</sup>
+      </p>
+      <p class="affil-list">
+        <sup>1</sup>Tuojing Intelligence &nbsp;·&nbsp; <sup>2</sup>Tsinghua University &nbsp;·&nbsp;
+        <sup>3</sup>King's College London &nbsp;·&nbsp; <sup>4</sup>Southeast University &nbsp;·&nbsp;
+        <sup>5</sup>Stevens Institute of Technology &nbsp;·&nbsp;
+        <sup>6</sup>The Hong Kong University of Science and Technology (GZ) &nbsp;·&nbsp;
+        <sup>7</sup>The University of Manchester &nbsp;·&nbsp; <sup>8</sup>Simple AI &nbsp;·&nbsp;
+        <sup>9</sup>Imperial College London &nbsp;·&nbsp; <sup>10</sup>Carnegie Mellon University &nbsp;·&nbsp;
+        <sup>11</sup>Zhejiang University &nbsp;·&nbsp;
+        <sup>12</sup>Beihang University &nbsp;·&nbsp; <sup>13</sup>The University of Hong Kong
+      </p>
+      <p class="author-note">* Equal contribution &nbsp;&nbsp; &ddagger; Corresponding author</p>
+
+      <div class="hero-info-cards">
+        <div class="info-card">
+          <span class="info-icon">🧩</span>
+          <span class="info-label">Task Suites</span>
+          <span class="info-value">4</span>
+        </div>
+        <div class="info-card">
+          <span class="info-icon">🎞️</span>
+          <span class="info-label">Episodes</span>
+          <span class="info-value">2,000</span>
+        </div>
+        <div class="info-card">
+          <span class="info-icon">🧈</span>
+          <span class="info-label">Assets</span>
+          <span class="info-value">33</span>
+        </div>
+        <div class="info-card">
+          <span class="info-icon">🤖</span>
+          <span class="info-label">Modalities</span>
+          <span class="info-value">Vision + Tactile RGB + Marker Motion + Proprioception</span>
+        </div>
+      </div>
+      <div class="hero-actions">
+        <a href="#" class="btn btn-primary btn-disabled" title="arXiv preprint coming soon">Paper (coming soon)</a>
+        <a href="https://github.com/TuojingAI/SoftVTBench" class="btn btn-outline">Code</a>
+        <a href="#" class="btn btn-outline btn-disabled" title="Dataset release coming soon">Dataset (coming soon)</a>
+        <a href="#citation" class="btn btn-outline">BibTeX</a>
+      </div>
+    </div>
+  </section>
+
+  <main>
+
+    <!-- ===== Teaser ===== -->
+    <section class="section" id="teaser">
+      <div class="container reveal">
+        <figure class="overview-visual overview-visual--contain">
+          <img src="assets/teaser.png" alt="SoftVTBench teaser: four task suites, 2,000 episodes, 33 assets, and the safe interaction envelope for deformable pastry grasping">
+          <figcaption>SoftVTBench performs contact-rich visuo-tactile evaluation under a hidden safe interaction envelope: too loose causes slip or drop, too tight causes over-deformation, and only the safe window between them satisfies both task and safety objectives.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ===== Abstract ===== -->
+    <section class="section section-alt" id="abstract">
+      <div class="container reveal">
+        <h2 class="section-title">Abstract</h2>
+        <div class="abstract-block">
+          <p>
+            Deformable object manipulation poses challenges beyond task completion: successful execution
+            must also maintain safe physical interaction, holding the object stably without slip or drop
+            while avoiding excessive deformation. However, existing manipulation benchmarks are
+            predominantly success-oriented and rarely evaluate whether a policy remains physically safe
+            throughout execution. We present <strong>SoftVTBench</strong>, a safety-aware visuo-tactile
+            benchmark for physically constrained deformable object manipulation. Built in Isaac Sim with
+            finite-element-simulated deformable objects, SoftVTBench provides multi-view RGB observations,
+            RGB tactile sensing with marker motion, proprioception, and language instructions, and defines
+            four matched task suites over object type (deformable vs. rigid) and variation axis (object vs.
+            spatial). It reports <em>Goal Success</em> and <em>Safety Success</em> separately, where Safety
+            Success additionally requires no drop and peak object deformation below a calibrated,
+            object-specific threshold, computed from privileged FEM simulation states that are hidden from
+            the policy. We implement &pi;<sub>0.5</sub>-based baselines under this protocol. Experiments show
+            that success-only evaluation substantially overstates policy performance — a large fraction of
+            goal-completing rollouts violate physical safety — and that adding tactile sensing improves
+            Safety Success (e.g., from 21.4% to 35.6% on object-centric deformable tasks) and reduces object
+            deformation during execution, while Goal Success remains comparable. SoftVTBench provides a
+            reproducible benchmark for studying visuo-tactile deformable manipulation under physical
+            interaction constraints.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Method ===== -->
+    <section class="section" id="method">
+      <div class="container reveal">
+        <h2 class="section-title">Benchmark Design</h2>
+        <p class="section-lead">A safety-aware visuo-tactile benchmark for physically constrained deformable object grasping.</p>
+        <div class="overview-text overview-text-wide">
+          <p>
+            SoftVTBench performs contact-rich visuo-tactile evaluation of robot policies under two coupled
+            requirements: completing the manipulation goal and maintaining safe physical interaction
+            throughout execution. A rollout is
+            considered physically safe only if the object remains stably grasped without slip or drop, and
+            its peak deformation stays below a calibrated, object-specific threshold. By reporting Goal
+            Success and Safety Success separately, SoftVTBench exposes goal-complete but physically unsafe
+            rollouts that are hidden by success-only evaluation.
+          </p>
+          <p>
+            SoftVTBench instantiates this evaluation protocol in Isaac Sim with simulated deformable objects
+            based on finite element method (FEM) soft-body dynamics and a Franka Panda arm with a
+            parallel-jaw gripper carrying GelSight Mini tactile sensors on both fingers. The benchmark
+            provides synchronized third-person and wrist RGB observations, tactile RGB images, marker-motion
+            fields, proprioception, and a standardized end-effector and gripper action interface, all
+            synchronized at 20&nbsp;Hz. At each control step, the policy receives only its designated
+            observations and outputs an end-effector command and a gripper command; the simulator advances
+            the robot, object, and contact states, producing the next observation for continued contact-rich
+            visuo-tactile interaction.
+          </p>
+          <div class="definition-block">
+            <div class="definition-formula">
+              <div class="definition-line definition-main">
+                Safety&nbsp;Success &nbsp;=&nbsp; Goal&nbsp;Success &nbsp;&times;&nbsp; Safe&nbsp;Interaction
+              </div>
+            </div>
+            <p class="definition-note">
+              A rollout only counts as a Safety Success if it reaches the goal <strong>and</strong> the interaction was safe the whole time: the object was never dropped, and its peak deformation stayed within a calibrated, object-specific safety threshold &mdash; measured from hidden simulator ground truth that the policy never sees.
+            </p>
+          </div>
+        </div>
+        <figure class="benchmark-visual">
+          <img src="assets/method.png" alt="SoftVTBench method overview: four matched task suites (Rigid-Object, Soft-Object, Rigid-Spatial, Soft-Spatial), physical safety, compliance shift, tactile feedback, gripper control, and the Goal-Safety gap">
+          <figcaption>SoftVTBench's four matched task suites are generated around a shared procedural pipeline, and jointly probe physical safety, compliance shift, tactile feedback, and gripper control — exposing the Goal&ndash;Safety gap that success-only evaluation hides.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ===== Task Suites ===== -->
+    <section class="section section-alt" id="suites">
+      <div class="container reveal">
+        <h2 class="section-title">Task Suites</h2>
+        <p class="section-lead">A matched 2×2 design over object type (rigid vs. deformable) and variation axis (object vs. spatial).</p>
+
+        <div class="suite-group">
+          <h3 class="suite-group-title">Rigid-Body Control Suites</h3>
+          <p class="suite-group-lead">LIBERO-style rigid-object suites that establish baseline manipulation and spatial-variation competence before deformable-object safety is introduced.</p>
+          <div class="task-grid task-grid-reference">
+          <div class="task-card">
+            <div class="task-card-header">
+              <span class="task-id">OR</span>
+              <h3>Object-Rigid</h3>
+            </div>
+            <video class="task-video" controls muted loop playsinline preload="metadata" aria-label="Object-Rigid replay demo video">
+              <source src="task_video/replay_object_rigid_task0_demo0_agentview_rgb.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+            <p>Rigid LIBERO-style object tasks re-executed through the SoftVTBench tactile-equipped sensing and recording stack. Tests basic pick-and-place competence under object identity variation.</p>
+            <span class="task-tag">Reference</span>
+          </div>
+          <div class="task-card">
+            <div class="task-card-header">
+              <span class="task-id">SR</span>
+              <h3>Spatial-Rigid</h3>
+            </div>
+            <video class="task-video" controls muted loop playsinline preload="metadata" aria-label="Spatial-Rigid replay demo video">
+              <source src="task_video/replay_spatial_rigid_task0_demo0_agentview_rgb.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+            <p>Rigid LIBERO-style spatial tasks under the same sensing stack. Tests robustness to spatial variation — localization, approach, and transfer across changing layouts.</p>
+            <span class="task-tag">Reference</span>
+          </div>
+          </div>
+        </div>
+
+        <div class="suite-group">
+          <h3 class="suite-group-title">Deformable Main Suites</h3>
+          <p class="suite-group-lead">Deformable-object grasp-and-place suites where the object must reach its target region without dropping or over-deforming.</p>
+          <div class="task-grid task-grid-reference">
+          <div class="task-card">
+            <div class="task-card-header">
+              <span class="task-id">OS</span>
+              <h3>Object-Soft</h3>
+            </div>
+            <video class="task-video" controls muted loop playsinline preload="metadata" aria-label="Object-Soft demo video">
+              <source src="task_video/object.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+            <p>The robot grasps a deformable object and places it into a fixed target container while avoiding drop and excessive deformation. Object identity, geometry, and material compliance vary across tasks.</p>
+            <span class="task-tag">Manipulation</span>
+          </div>
+          <div class="task-card">
+            <div class="task-card-header">
+              <span class="task-id">SS</span>
+              <h3>Spatial-Soft</h3>
+            </div>
+            <video class="task-video" controls muted loop playsinline preload="metadata" aria-label="Spatial-Soft demo video">
+              <source src="task_video/spatial.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+            <p>The same grasp-and-place objective under spatial variation: two visually identical instances appear per scene, and the language instruction specifies which one to manipulate under changing layouts.</p>
+            <span class="task-tag">Manipulation</span>
+          </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Results ===== -->
+    <section class="section" id="results">
+      <div class="container reveal">
+        <h2 class="section-title">Experimental Results</h2>
+        <p class="section-lead">π<sub>0.5</sub>-Vision (VO) vs. π<sub>0.5</sub>-Visuo-Tactile (VT), evaluated under identical physical and task conditions.</p>
+
+        <div class="rule-card" style="margin-bottom: 2rem;">
+          <h3>Main Results</h3>
+          <div class="table-container">
+            <table class="metrics-table">
+              <thead>
+                <tr><th>Suite</th><th>Method</th><th>Goal Success</th><th>Safety Success</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Object-Rigid</td><td>VO</td><td>38.8%</td><td class="na-cell">N/A</td></tr>
+                <tr><td>Object-Rigid</td><td>VT</td><td>32.4%</td><td class="na-cell">N/A</td></tr>
+                <tr><td>Spatial-Rigid</td><td>VO</td><td>56.4%</td><td class="na-cell">N/A</td></tr>
+                <tr><td>Spatial-Rigid</td><td>VT</td><td>63.4%</td><td class="na-cell">N/A</td></tr>
+                <tr><td>Object-Soft</td><td>VO</td><td>70.4%</td><td>21.4%</td></tr>
+                <tr><td>Object-Soft</td><td>VT</td><td>71.8%</td><td>35.6%</td></tr>
+                <tr><td>Spatial-Soft</td><td>VO</td><td>74.2%</td><td>32.6%</td></tr>
+                <tr><td>Spatial-Soft</td><td>VT</td><td>84.2%</td><td>44.6%</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="rule-note">VO: vision-only π<sub>0.5</sub> policy (binary gripper command). VT: visuo-tactile π<sub>0.5</sub> policy, additionally observing tactile RGB and marker-motion history with a continuous gripper command. Safety Success is not defined (N/A) for rigid suites, which carry no deformation constraint.</p>
+        </div>
+
+        <figure class="benchmark-visual">
+          <img src="assets/goal_vs_safety.png" alt="Goal Success and Safety Success across rigid and deformable task suites, showing the Goal-Safety gap for deformable suites">
+          <figcaption>Goal Success and Safety Success across suites. For rigid suites, deformation-based safety constraints are not applicable (N/A). For deformable suites, the gap between Goal Success and Safety Success indicates unsafe goal completions caused by excessive deformation, dropping, or unstable contact.</figcaption>
+        </figure>
+
+        <div class="rule-card" style="margin: 2.5rem 0;">
+          <h3>Deformation Distribution</h3>
+          <div class="table-container">
+            <table class="metrics-table">
+              <thead>
+                <tr><th>Suite</th><th>Method</th><th>Mean</th><th>P5</th><th>Median</th><th>P95</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Object-Soft</td><td>VO</td><td>16.10%</td><td>4.30%</td><td>10.65%</td><td>44.70%</td></tr>
+                <tr><td>Object-Soft</td><td>VT</td><td>15.12%</td><td>3.90%</td><td>8.67%</td><td>38.81%</td></tr>
+                <tr><td>Spatial-Soft</td><td>VO</td><td>13.16%</td><td>5.16%</td><td>10.75%</td><td>28.96%</td></tr>
+                <tr><td>Spatial-Soft</td><td>VT</td><td>11.58%</td><td>4.75%</td><td>9.67%</td><td>26.56%</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="rule-note">FEM-RMS deformation over all deformable-object rollouts, reported as a percentage of the object bounding-box diagonal. Lower values indicate safer physical interaction.</p>
+        </div>
+
+        <div class="result-analysis">
+          <p>
+            Tactile information does not consistently improve performance on rigid-object tasks: VT trails
+            VO on Object-Rigid (32.4% vs. 38.8%) but leads on Spatial-Rigid (63.4% vs. 56.4%). When
+            deformation-related safety constraints are absent, visual observations and proprioception
+            already provide the primary information needed for task completion, and tactile sensing yields
+            no consistent gain.
+          </p>
+          <p>
+            In contrast, VT shows clear advantages on deformable-object tasks. Goal Success is comparable
+            between VO and VT (Object-Soft: 70.4% vs. 71.8%), but VT obtains substantially higher Safety
+            Success (Object-Soft: 21.4% → 35.6%; Spatial-Soft: 32.6% → 44.6%). Tactile sensing is not
+            primarily helping the object reach the target — it is improving contact regulation during
+            execution, reducing slippage, over-compression, and unstable grasping.
+          </p>
+          <p>
+            The deformation statistics confirm this: VT lowers mean, median, and P95 deformation on both
+            deformable suites, showing that tactile feedback shifts the entire interaction distribution
+            toward safer contact, not just the fraction that clears the safety threshold. Together, these
+            results show that success-only evaluation substantially overstates policy performance on
+            deformable manipulation, and that tactile sensing is most valuable precisely where physical
+            safety is at stake.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Dataset ===== -->
+    <section class="section section-alt" id="dataset">
+      <div class="container reveal">
+        <h2 class="section-title">Dataset</h2>
+        <p class="section-lead">Suite-indexed demonstrations with multi-view vision, RGB tactile sensing, marker motion, proprioception, and evaluator-only deformation signals.</p>
+        <div class="dataset-stats">
+          <div class="stat-card">
+            <span class="stat-num">4</span>
+            <span class="stat-label">Task Suites</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-num">2,000</span>
+            <span class="stat-label">Episodes</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-num">33</span>
+            <span class="stat-label">Assets</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-num">2</span>
+            <span class="stat-label">Core Metrics (Goal / Safety Success)</span>
+          </div>
+        </div>
+        <div class="dataset-details">
+          <h3>Data Format</h3>
+          <p>
+            Each episode contains synchronized third-person and wrist RGB, left/right tactile RGB and
+            marker-motion fields, robot proprioception, end-effector and gripper action trajectories, suite
+            and task identifiers, and evaluator-only privileged signals (FEM nodal deformation, contact
+            status, drop events). All streams are recorded at 20&nbsp;Hz, with deformable-object safety
+            thresholds calibrated per asset from an offline interaction calibration protocol and held out
+            for evaluation only.
+          </p>
+          <div class="download-links">
+            <a href="https://github.com/TuojingAI/SoftVTBench" class="btn btn-primary">Code (GitHub)</a>
+            <a href="#" class="btn btn-outline btn-disabled" title="Dataset release coming soon">Dataset (coming soon)</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Citation ===== -->
+    <section class="section" id="citation">
+      <div class="container reveal">
+        <h2 class="section-title">Citation</h2>
+        <p class="section-lead">If you find SoftVTBench useful, please consider citing our paper.</p>
+        <pre class="bibtex-block"><code>@article{jing2026softvtbench,
+  title   = {SoftVTBench: A Safety-Aware Visuo-Tactile Benchmark for
+             Physically Constrained Robotic Manipulation of Deformable Objects},
+  author  = {Jing, Bowen and Wang, Mingxin and Hao, Ruiyang and Ge, Chenchen and
+             Shen, Hanwen and He, Junjie and Cui, Yang and Hou, Yiming and
+             Zhou, Weitao and Wang, Jiawei and Li, Minglei and Zhang, Dandan and
+             Zhao, Ding and Liu, Houde and Li, Xiaofan and Liu, Si and
+             Luo, Ping and Yu, Haibao},
+  year    = {2026},
+  note    = {Preprint}
+}</code></pre>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== Footer ===== -->
+  <footer class="footer">
+    <div class="footer-logos">
+      <img src="assets/images/sponsors/tuojing-logo.png" alt="拓境" class="footer-logo">
+    </div>
+    <p>&copy; 2026 SoftVTBench. All rights reserved.</p>
+    <p><a href="https://github.com/TuojingAI/SoftVTBench" target="_blank" rel="noopener">github.com/TuojingAI/SoftVTBench</a></p>
+  </footer>
+
+  <!-- Back to Top -->
+  <button id="back-to-top" aria-label="Back to top">↑</button>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
